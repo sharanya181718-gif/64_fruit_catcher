@@ -2,6 +2,7 @@ import random
 import pygame
 from game.basket import Basket
 from game.fruit import Fruit
+from game.particle import Particle
 
 class GameEngine:
     BASE_SPAWN_DELAY = 750
@@ -16,6 +17,7 @@ class GameEngine:
         self.height = height
         self.basket = Basket(width, height)
         self.fruits = []
+        self.particles = []
 
         self.score = 0
         self.lives = 3
@@ -33,6 +35,7 @@ class GameEngine:
 
     def update(self):
         if self.game_state != "PLAYING":
+            self._update_particles()
             return
 
         keys = pygame.key.get_pressed()
@@ -69,6 +72,7 @@ class GameEngine:
             if basket_rect.colliderect(fruit.rect):
                 if fruit.kind == "normal":
                     self.score += 1
+                    self._create_splash(fruit.x, fruit.y, fruit.color)
                 else:
                     self.lives -= 1
                 self.fruits.remove(fruit)
@@ -78,6 +82,11 @@ class GameEngine:
                 continue
 
             if fruit.is_missed(self.height):
+                self._create_splash(
+                    fruit.x,
+                    self.height - 25,
+                    fruit.color,
+                )
                 if fruit.kind == "normal":
                     self.lives -= 1
                 self.fruits.remove(fruit)
@@ -85,9 +94,21 @@ class GameEngine:
                     self.game_state = "GAME_OVER"
                     break
 
+        self._update_particles()
+
+    def _create_splash(self, x, y, color):
+        self.particles.extend(Particle(x, y, color) for _ in range(8))
+
+    def _update_particles(self):
+        for particle in self.particles[:]:
+            particle.update()
+            if particle.lifetime <= 0:
+                self.particles.remove(particle)
+
     def reset(self):
         self.basket = Basket(self.width, self.height)
         self.fruits.clear()
+        self.particles.clear()
         self.score = 0
         self.lives = 3
         self.spawn_delay = self.BASE_SPAWN_DELAY
@@ -103,6 +124,8 @@ class GameEngine:
         self.basket.render(screen)
         for fruit in self.fruits:
             fruit.render(screen)
+        for particle in self.particles:
+            particle.render(screen)
 
         score_surf = self.font_medium.render(f"Score: {self.score}", True, (255, 220, 80))
         screen.blit(score_surf, (25, 20))
