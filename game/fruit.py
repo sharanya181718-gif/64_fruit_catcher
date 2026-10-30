@@ -2,13 +2,19 @@ import random
 import pygame
 
 class Fruit:
-    def __init__(self, screen_width, kind="normal"):
+    MAX_SPEED_MULTIPLIER = 2.0
+
+    def __init__(self, screen_width, kind="normal", speed_multiplier=1.0):
         self.screen_width = screen_width
         self.kind = kind
         self.radius = 14
         self.x = random.randint(30, screen_width - 30)
         self.y = -self.radius * 2
-        self.speed = random.uniform(4.0, 6.5)
+        speed_multiplier = min(
+            max(speed_multiplier, 1.0),
+            self.MAX_SPEED_MULTIPLIER,
+        )
+        self.speed = random.uniform(4.0, 6.5) * speed_multiplier
         if self.kind == "rotten":
             self.color = (100, 75, 35)
         elif self.kind == "bomb":

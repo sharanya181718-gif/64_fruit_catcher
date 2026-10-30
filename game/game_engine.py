@@ -4,6 +4,13 @@ from game.basket import Basket
 from game.fruit import Fruit
 
 class GameEngine:
+    BASE_SPAWN_DELAY = 750
+    MIN_SPAWN_DELAY = 250
+    SCORE_PER_DIFFICULTY_LEVEL = 5
+    MAX_DIFFICULTY_LEVEL = 10
+    SPAWN_DELAY_DECREASE_PER_LEVEL = 50
+    SPEED_INCREASE_PER_LEVEL = 0.1
+
     def __init__(self, width, height):
         self.width = width
         self.height = height
@@ -12,7 +19,7 @@ class GameEngine:
 
         self.score = 0
         self.lives = 3
-        self.spawn_delay = 750
+        self.spawn_delay = self.BASE_SPAWN_DELAY
         self.last_spawn_time = pygame.time.get_ticks()
         self.game_state = "PLAYING"
 
@@ -34,6 +41,15 @@ class GameEngine:
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             self.basket.move_right()
 
+        difficulty_level = self.score // self.SCORE_PER_DIFFICULTY_LEVEL
+        difficulty_level = min(difficulty_level, self.MAX_DIFFICULTY_LEVEL)
+        self.spawn_delay = max(
+            self.MIN_SPAWN_DELAY,
+            self.BASE_SPAWN_DELAY
+            - difficulty_level * self.SPAWN_DELAY_DECREASE_PER_LEVEL,
+        )
+        speed_multiplier = 1.0 + difficulty_level * self.SPEED_INCREASE_PER_LEVEL
+
         now = pygame.time.get_ticks()
         if now - self.last_spawn_time >= self.spawn_delay:
             roll = random.random()
@@ -43,7 +59,7 @@ class GameEngine:
                 kind = "bomb"
             else:
                 kind = "normal"
-            self.fruits.append(Fruit(self.width, kind))
+            self.fruits.append(Fruit(self.width, kind, speed_multiplier))
             self.last_spawn_time = now
 
         basket_rect = self.basket.rect
@@ -74,6 +90,7 @@ class GameEngine:
         self.fruits.clear()
         self.score = 0
         self.lives = 3
+        self.spawn_delay = self.BASE_SPAWN_DELAY
         self.last_spawn_time = pygame.time.get_ticks()
         self.game_state = "PLAYING"
 
