@@ -2,17 +2,23 @@ import random
 import pygame
 
 class Fruit:
-    def __init__(self, screen_width):
+    def __init__(self, screen_width, kind="normal"):
         self.screen_width = screen_width
+        self.kind = kind
         self.radius = 14
         self.x = random.randint(30, screen_width - 30)
         self.y = -self.radius * 2
         self.speed = random.uniform(4.0, 6.5)
-        self.color = random.choice([
-            (230, 45, 45),   # Apple
-            (245, 140, 30),  # Orange
-            (160, 60, 200),  # Grape
-        ])
+        if self.kind == "rotten":
+            self.color = (100, 75, 35)
+        elif self.kind == "bomb":
+            self.color = (35, 35, 40)
+        else:
+            self.color = random.choice([
+                (230, 45, 45),   # Apple
+                (245, 140, 30),  # Orange
+                (160, 60, 200),  # Grape
+            ])
 
     def update(self):
         self.y += self.speed
@@ -31,5 +37,38 @@ class Fruit:
 
     def render(self, surface):
         center = (int(self.x), int(self.y))
+        if self.kind == "bomb":
+            pygame.draw.circle(surface, self.color, center, self.radius)
+            pygame.draw.circle(surface, (180, 180, 185), center, self.radius, 2)
+            pygame.draw.line(
+                surface,
+                (230, 190, 80),
+                (center[0], center[1] - self.radius),
+                (center[0] + 5, center[1] - self.radius - 7),
+                3,
+            )
+            pygame.draw.circle(
+                surface,
+                (255, 90, 30),
+                (center[0] + 6, center[1] - self.radius - 8),
+                3,
+            )
+            return
+
         pygame.draw.circle(surface, self.color, center, self.radius)
-        pygame.draw.circle(surface, (255, 255, 255), (int(self.x - 4), int(self.y - 4)), 3)
+        highlight_color = (
+            (75, 55, 30) if self.kind == "rotten" else (255, 255, 255)
+        )
+        pygame.draw.circle(
+            surface,
+            highlight_color,
+            (int(self.x - 4), int(self.y - 4)),
+            3,
+        )
+        if self.kind == "rotten":
+            pygame.draw.circle(
+                surface,
+                (55, 45, 25),
+                (int(self.x + 5), int(self.y + 4)),
+                3,
+            )

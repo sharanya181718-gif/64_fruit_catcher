@@ -1,3 +1,4 @@
+import random
 import pygame
 from game.basket import Basket
 from game.fruit import Fruit
@@ -35,7 +36,14 @@ class GameEngine:
 
         now = pygame.time.get_ticks()
         if now - self.last_spawn_time >= self.spawn_delay:
-            self.fruits.append(Fruit(self.width))
+            roll = random.random()
+            if roll < 0.15:
+                kind = "rotten"
+            elif roll < 0.30:
+                kind = "bomb"
+            else:
+                kind = "normal"
+            self.fruits.append(Fruit(self.width, kind))
             self.last_spawn_time = now
 
         basket_rect = self.basket.rect
@@ -43,12 +51,19 @@ class GameEngine:
             fruit.update()
 
             if basket_rect.colliderect(fruit.rect):
-                self.score += 1
+                if fruit.kind == "normal":
+                    self.score += 1
+                else:
+                    self.lives -= 1
                 self.fruits.remove(fruit)
+                if self.lives == 0:
+                    self.game_state = "GAME_OVER"
+                    break
                 continue
 
             if fruit.is_missed(self.height):
-                self.lives -= 1
+                if fruit.kind == "normal":
+                    self.lives -= 1
                 self.fruits.remove(fruit)
                 if self.lives == 0:
                     self.game_state = "GAME_OVER"
